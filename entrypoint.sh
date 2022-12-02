@@ -1,5 +1,7 @@
 #!/bin/bash
 
+pwd
+
 set -o pipefail
 
 # config
@@ -9,6 +11,7 @@ release_branches=${RELEASE_BRANCHES:-master,main}
 custom_tag=${CUSTOM_TAG:-}
 source=${SOURCE:-.}
 dryrun=${DRY_RUN:-false}
+current_version=${CURRENT_VERSION:-""}
 initial_version=${INITIAL_VERSION:-0.0.0}
 tag_context=${TAG_CONTEXT:-repo}
 prerelease=${PRERELEASE:-false}
@@ -30,6 +33,7 @@ echo -e "\tRELEASE_BRANCHES: ${release_branches}"
 echo -e "\tCUSTOM_TAG: ${custom_tag}"
 echo -e "\tSOURCE: ${source}"
 echo -e "\tDRY_RUN: ${dryrun}"
+echo -e "\tCURRENT_VERSION: ${current_version}"
 echo -e "\tINITIAL_VERSION: ${initial_version}"
 echo -e "\tTAG_CONTEXT: ${tag_context}"
 echo -e "\tPRERELEASE: ${prerelease}"
@@ -68,25 +72,35 @@ for b in "${branch[@]}"; do
 done
 echo "pre_release = $pre_release"
 
-# fetch tags
-git fetch --tags
 
-tagFmt="^v?[0-9]+\.[0-9]+\.[0-9]+$"
-preTagFmt="^v?[0-9]+\.[0-9]+\.[0-9]+(-$suffix\.[0-9]+)$"
+if [ -n "$current_version" ]
+then
+    # Explicit current_version provided
+    tag="$current_version"
+else
+    # No explicit current_version provided
+    # Will inspect git tag history
 
-# get latest tag that looks like a semver (with or without v)
-case "$tag_context" in
-    *repo*) 
-        tag="$(git for-each-ref --sort=-v:refname --format '%(refname:lstrip=2)' | grep -E "$tagFmt" | head -n 1)"
-        pre_tag="$(git for-each-ref --sort=-v:refname --format '%(refname:lstrip=2)' | grep -E "$preTagFmt" | head -n 1)"
-        ;;
-    *branch*) 
-        tag="$(git tag --list --merged HEAD --sort=-v:refname | grep -E "$tagFmt" | head -n 1)"
-        pre_tag="$(git tag --list --merged HEAD --sort=-v:refname | grep -E "$preTagFmt" | head -n 1)"
-        ;;
-    * ) echo "Unrecognised context"
-        exit 1;;
-esac
+    # fetch tags
+    git fetch --tags
+
+    tagFmt="^v?[0-9]+\.[0-9]+\.[0-9]+$"
+    preTagFmt="^v?[0-9]+\.[0-9]+\.[0-9]+(-$suffix\.[0-9]+)$"
+
+    # get latest tag that looks like a semver (with or without v)
+    case "$tag_context" in
+        *repo*) 
+            tag="$(git for-each-ref --sort=-v:refname --format '%(refname:lstrip=2)' | grep -E "$tagFmt" | head -n 1)"
+            pre_tag="$(git for-each-ref --sort=-v:refname --format '%(refname:lstrip=2)' | grep -E "$preTagFmt" | head -n 1)"
+            ;;
+        *branch*) 
+            tag="$(git tag --list --merged HEAD --sort=-v:refname | grep -E "$tagFmt" | head -n 1)"
+            pre_tag="$(git tag --list --merged HEAD --sort=-v:refname | grep -E "$preTagFmt" | head -n 1)"
+            ;;
+        * ) echo "Unrecognised context"
+            exit 1;;
+    esac
+fi
 
 # if there are none, start tags at INITIAL_VERSION
 if [ -z "$tag" ]

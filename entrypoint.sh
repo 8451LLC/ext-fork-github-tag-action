@@ -1,7 +1,5 @@
 #!/bin/bash
 
-pwd
-
 set -o pipefail
 
 # config

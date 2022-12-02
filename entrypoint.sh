@@ -122,6 +122,7 @@ then
     exit 0
 fi
 
+
 # get the merge commit message looking for #bumps
 log=$(git show -s --format=%B)
 echo "Last commit message: $log"

@@ -77,9 +77,9 @@ tag_commit=$(git rev-list -n 1 $tag)
 commit=$(git rev-parse HEAD)
 
 if [ "$tag_commit" == "$commit" ]; then
-    echo "No new commits since previous tag. Skipping..."
-    echo ::set-output name=tag::$tag
-    exit 0
+    echo "No new commits since previous tag."
+    # echo ::set-output name=tag::$tag
+    # exit 0
 fi
 
 # echo log if verbose is wanted

@@ -153,15 +153,20 @@ fi
 echo "new_tag=$new" >> $GITHUB_OUTPUT
 echo "part=$part" >> $GITHUB_OUTPUT
 
+if $pre_release
+then
+    echo "tag=$pre_tag" >> $GITHUB_OUTPUT
+else
+    echo "tag=$tag" >> $GITHUB_OUTPUT
+fi
+
+
 # use dry run to determine the next tag
 if $dryrun
 then
-    echo "tag=$tag" >> $GITHUB_OUTPUT
     exit 0
 fi 
 
-
-echo "tag=$tag" >> $GITHUB_OUTPUT
 
 # create local git tag
 git tag $new
